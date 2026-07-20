@@ -15,6 +15,14 @@ backup() {
 symlink() {
   file=$1
   link=$2
+  # If the link is a symlink but its target no longer exists (broken symlink from
+  # a previous install whose repo was moved or removed), remove it so it can be
+  # recreated below. Otherwise `[ ! -e "$link" ]` is true but `ln -s` fails on the
+  # already-existing link file, leaving a silently dead symlink.
+  if [ -L "$link" ] && [ ! -e "$link" ]; then
+    rm "$link"
+    echo "-----> Removed broken symlink $link"
+  fi
   if [ ! -e "$link" ]; then
     echo "-----> Symlinking your new $link"
     ln -s $file $link
